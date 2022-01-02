@@ -2,11 +2,6 @@ function [] = make_data(config)
     path=genpath('library');
     addpath(path);
     config = configuration;
-    channels = config.lobe_map{config.lobe};
-    for c = 1:length(channels)
-        mff_channel_names{c} = ['E',num2str(channels(c))];
-    end
-    disp(mff_channel_names)
     data_dir =  config.data_dir;
     splited_dir = config.splited_dir;
     split = config.split;
@@ -35,7 +30,7 @@ function [] = make_data(config)
     
     
     subjects = get_all_sub_dir(subject_wise_data);
-    for i = 1:length(subjects)
+    parfor i = 1:length(subjects)
         session = get_all_sub_dir([...
                 subject_wise_data,...
                 '/',subjects{i}
@@ -71,9 +66,9 @@ function [] = make_data(config)
                     %if  j == 1+train_sessions
                     %    divIntoValTestChunks([recordings_dir,'/',recordings{l}],[splited_dir,'/', num2str(split),'/'],config.val_per,subjects{i}, session{j}, experiments{k}, session_time, split, config.lobe_map{config.lobe}, mff_channel_names);
                     if j <= train_sessions
-                        divIntoChunks([recordings_dir,'/',recordings{l}],[splited_dir,'/', num2str(split),'/'], 'train',subjects{i}, session{j}, experiments{k}, session_time, split, config.lobe_map{config.lobe}, mff_channel_names);
+                        divIntoChunks([recordings_dir,'/',recordings{l}],[splited_dir,'/', num2str(split),'/'], 'train',subjects{i}, session{j}, experiments{k}, session_time, split);
                     else
-                        divIntoValTestChunks([recordings_dir,'/',recordings{l}],[splited_dir,'/', num2str(split),'/'], config.val_per,subjects{i}, session{j}, experiments{k}, session_time, split, config.lobe_map{config.lobe}, mff_channel_names);
+                        divIntoValTestChunks([recordings_dir,'/',recordings{l}],[splited_dir,'/', num2str(split),'/'], config.val_per,subjects{i}, session{j}, experiments{k}, session_time, split);
                     end
                 end
             end
@@ -85,7 +80,7 @@ end
     
     
     
-function [all_session_data,test_data] = divIntoChunks(filename, save_dir, data_type ,subject_ind, session_name, experiment_name, sess_time, split, channels, mff_channels)
+function [all_session_data,test_data] = divIntoChunks(filename, save_dir, data_type ,subject_ind, session_name, experiment_name, sess_time, split)
     
     %Give the complete path of the mat file in "filename" and the number of
     %seconds of which you want the chunk to be in split..
@@ -106,13 +101,12 @@ function [all_session_data,test_data] = divIntoChunks(filename, save_dir, data_t
     end
     sampling_rate = 250;
     cleanchanlocs = data_struct.cleanchanlocs;
-    current_data = all_chan_data(channels,:);
+    current_data = all_chan_data;
     savedir=strcat(save_dir,'/',data_type,'/',subject_ind,'/',session_name,'/',experiment_name,'/')
     disp(savedir)
     mkdir(savedir);
     current_data = current_data(:,250*5:end-250*5); %% Sampling rate hardcoded
     current_data = current_data - mean(current_data,2);  %DC shift
-    std_data = std(current_data,[],2);
     tot_chunks = floor(size(current_data,2)/(split*250)); %%todo: ignore intial and final 5 secs
     for i=0:tot_chunks-1
         data = current_data(:,1+i*250*split:(i+1)*250*split);
@@ -123,7 +117,7 @@ end
     
     
     
-    function [all_session_data,test_data] = divIntoValTestChunks(filename, save_dir, per ,subject_ind, session_name, experiment_name, sess_time, split, channels, mff_channels)
+function [all_session_data,test_data] = divIntoValTestChunks(filename, save_dir, per ,subject_ind, session_name, experiment_name, sess_time, split)
     
     %Give the complete path of the mat file in "filename" and the number of
     %seconds of which you want the chunk to be in split..
@@ -144,7 +138,7 @@ end
     end
     sampling_rate = 250;
     cleanchanlocs = data_struct.cleanchanlocs;
-     current_data = all_chan_data(channels,:);
+    current_data = all_chan_data;
     current_data = current_data(:,250*5:end-250*5); %% Sampling rate hardcoded
     current_data = current_data - mean(current_data,2);  %DC shift
     std_data = std(current_data,[],2);
