@@ -1,3 +1,8 @@
+# custom folders
+tmp/
+splited_data/
+IITM_Task_Independent_EEG_Dataset/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
