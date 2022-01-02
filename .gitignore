@@ -2,7 +2,8 @@
 tmp/
 splited_data/
 IITM_Task_Independent_EEG_Dataset/
-./features/
+features/
+model_history/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
