@@ -81,12 +81,7 @@ GPU_no = 0;
 end
 
 run_ann(config.seed, config.hiddenlayers, config.tmp_dir, train_data_mat, train_label,val_data_mat, val_label, test_data_mat, test_label, models_dir, config.test_only, GPU_no);
-if (config.make_sub_space_plot==1)
-    channels = config.lobe_map{config.lobe};
-    make_plots_channel_contrib([models_dir,'/cosine_sim.mat'],[allData.plotSaveDir,'/',num2str(config.split)], allData.subjects, channels)
- 
-    make_plots_from_sub_space('tmp/',[allData.plotSaveDir,'/',num2str(config.split)], allData.sessionInfo)
-end
+
 data = load([models_dir,'/predicted_labels.mat']);
 
 test_score = double(data.test_score);
