@@ -111,7 +111,7 @@ if test_only == 0 :
     reduce_lr = ReduceLROnPlateau(factor=0.5, patience=3, min_lr=0.00000000001, verbose=1)
 
     #Fit the model
-    model.fit(train_data, train_label,validation_data=(val_data, val_label), epochs=3000, batch_size=16, verbose=2,
+    model.fit(train_data, train_label,validation_data=(val_data, val_label), epochs=1, batch_size=16, verbose=2,
           callbacks=[early_stopping, model_checkpoint, reduce_lr])
     model.load_weights(save_dir+'/keras.model')
     intermediate_layer_model = Model(inputs=model.input,
@@ -156,14 +156,6 @@ for i in tqdm(np.unique(trainLabel)):
 accumulated_train_data = np.concatenate(accumulated_train_data, axis=0)
 accumulated_train_label = np.array(accumulated_train_label)
 
-testCSVectors=[]
-for i in tqdm(range(len(testLabel))):
-    testSubSpaceVector=testDataProjection[i,:];
-    testSubSpaceChannelWise=[];
-    testSubSpaceChannelWise = np.array(testSubSpaceChannelWise)
-    testSubSpaceVector = testSubSpaceVector.reshape(1, -1);
-    testCSVectors.append(cosine_similarity(testSubSpaceVector, testSubSpaceChannelWise))
-
 
 sio.savemat('tmp/sub_space_matrix_befor_lda.mat',{
     'trainSubSpaceVectors': accumulated_train_data,
@@ -182,16 +174,6 @@ testDataProjection = clf.transform(testDataProjection)
 #    test_data_ch_wise[ch] = clf.transform(test_data_ch_wise[ch])
 
 
-
-saveFile = save_dir +"/cosine_sim.mat"
-
-testCSVectors = np.squeeze(np.array(testCSVectors))
-
-
-sio.savemat(saveFile,{
-    'testCSVectors': testCSVectors,
-    'testLabel': testLabel,
-})
 
 print("Computing Cosine Kernal")
 
