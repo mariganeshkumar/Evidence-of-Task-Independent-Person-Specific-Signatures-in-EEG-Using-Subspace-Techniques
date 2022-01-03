@@ -13,7 +13,7 @@ Implementation of architecures proposed in https://ieeexplore.ieee.org/document/
 2. Clone the respository
 3. Request the for data and download the same from [here](https://www.iitm.ac.in/donlab/cbr/eeg_person_id_dataset/)
 4. Edit the [configuration](https://github.com/mariganeshkumar/Evidence-of-Task-Independent-Person-Specific-Signatures-in-EEG-Using-Subspace-Techniques/blob/main/src/configuration.m) file to reflect the location of downloaded data
-   - The configuration file can also be used to change classifiers (modified-i-vector, modified-x-vector and ix-vector)
+   - The configuration file can also be used to change classifiers (modified-i-vector (**WIP**), modified-x-vector and ix-vector (**WIP**))
 5. Run the [Run.m](https://github.com/mariganeshkumar/Evidence-of-Task-Independent-Person-Specific-Signatures-in-EEG-Using-Subspace-Techniques/blob/main/src/run.m) matlab script. This script with do the following
    - Split the diven data into train, validation and text
    - Extract features as per the [configuration](https://github.com/mariganeshkumar/Evidence-of-Task-Independent-Person-Specific-Signatures-in-EEG-Using-Subspace-Techniques/blob/main/src/configuration.m)
