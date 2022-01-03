@@ -20,4 +20,4 @@ Implementation of architecures proposed in https://ieeexplore.ieee.org/document/
    - Train the classifier as per the [configuration](https://github.com/mariganeshkumar/Evidence-of-Task-Independent-Person-Specific-Signatures-in-EEG-Using-Subspace-Techniques/blob/main/src/configuration.m)
    - Report the obtained results on validation and test data
 
-**Note:** The repository also includes a docker file which can be used to build a docker image with all requirements pre-installed.
+**Note:** The repository also includes a [docker file](https://github.com/mariganeshkumar/Evidence-of-Task-Independent-Person-Specific-Signatures-in-EEG-Using-Subspace-Techniques/blob/main/Dockerfile) which can be used to build a docker image with all requirements pre-installed.
