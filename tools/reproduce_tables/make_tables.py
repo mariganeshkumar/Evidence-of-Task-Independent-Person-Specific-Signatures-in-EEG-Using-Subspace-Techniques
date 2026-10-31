@@ -33,7 +33,7 @@ def main(acc_json, eer_txt, out_md):
             L.append('| %s | %s | %s | %s | %s |' % (s, f2(acc['user_' + s]['acc']), f2(eer['user_' + s]),
                                                      f2(acc['rini_' + s]['acc']), f2(eer['rini_' + s])))
     else:
-        L += ['', "Tables 2-3 skipped: no Rini directory given (Rini's files are not distributed with this repository)."]
+        L += ['', "Tables 2-3 skipped (--no-rini)."]
     text = '\n'.join(L) + '\n'
     open(out_md, 'w').write(text)
     print(text)
