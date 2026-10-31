@@ -10,20 +10,32 @@ min_score = mean2-3*std2;
 max_score = mean1+3*std1;
 inc = (max_score -min_score)/2000;
 values = min_score:inc:max_score;
-h=figure();
+try
+h=figure('visible','off');
 dist1 = normpdf(values,mean1,std1);
 dist2 = normpdf(values,mean2,std2);
 area(values, dist1, 'FaceAlpha', 0.3, 'FaceColor','red', 'EdgeColor','red', 'LineWidth', 2)
 hold on;
 area(values,dist2, 'FaceAlpha', 0.3, 'FaceColor','blue', 'EdgeColor','blue', 'LineWidth', 2)
 div=kld(inc,dist1,dist2);
+plot_ok = true;
+catch plot_err
+plot_ok = false; div = NaN;
+warning(['plot_score_distribution: plotting failed: ', plot_err.message]);
+end
 
 [Pmiss,Pfa] = rocch(target, non_target);
 eer = rocch2eer(Pmiss,Pfa) * 100;
+if plot_ok
+try
 title(['KLD: ', num2str(div), ' EER: ',num2str(eer)]);
 saveas(h,[save_file,'.png']);
 saveas(h,[save_file,'.fig']);
 saveas(h,[save_file,'.svg']);
+catch plot_err
+warning(['plot_score_distribution: saving figure failed: ', plot_err.message]);
+end
+end
 
 end
 

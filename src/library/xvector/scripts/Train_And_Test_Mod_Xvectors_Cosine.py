@@ -7,6 +7,9 @@ test_only = int(sys.argv[3])
 # Apparently you may use different seed values at each stage
 seed_value= int(sys.argv[4])
 
+# max training epochs (optional; default 1 = previous behaviour)
+num_epochs = int(sys.argv[5]) if len(sys.argv) > 5 else 1
+
 # 1. Set `PYTHONHASHSEED` environment variable at a fixed value
 import os
 os.environ['PYTHONHASHSEED']=str(seed_value)
@@ -36,7 +39,7 @@ from x_vector_models import get_modified_x_vector_model
 from keras import losses
 from keras.models import Model
 from keras.utils.np_utils import to_categorical
-from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau, TerminateOnNaN
 from keras.utils.generic_utils import get_custom_objects
 from keras.optimizers import Adam
 from keras.metrics import top_k_categorical_accuracy
@@ -71,6 +74,8 @@ valLabel = dataset['val_label']
 testData = dataset['test_data']
 testLabel = dataset['test_label']
 hiddenLayerConfig = dataset['hidden_layer_size']
+
+# Raw spectral-power features are used as-is (as in the original MATLAB runs).
 
 
 num_channels = trainData.shape[1]
@@ -108,11 +113,13 @@ if test_only == 0 :
     os.makedirs(save_dir)
     early_stopping = EarlyStopping(patience=10, verbose=1)
     model_checkpoint = ModelCheckpoint(save_dir+'/keras.model', save_best_only=True, verbose=1)
+    # also keep the most recent epoch so an interrupted run can be inspected/resumed
+    last_checkpoint = ModelCheckpoint(save_dir+'/keras_last.model', save_best_only=False, verbose=0)
     reduce_lr = ReduceLROnPlateau(factor=0.5, patience=3, min_lr=0.00000000001, verbose=1)
 
     #Fit the model
-    model.fit(train_data, train_label,validation_data=(val_data, val_label), epochs=1, batch_size=16, verbose=2,
-          callbacks=[early_stopping, model_checkpoint, reduce_lr])
+    model.fit(train_data, train_label,validation_data=(val_data, val_label), epochs=num_epochs, batch_size=16, verbose=2,
+          callbacks=[early_stopping, model_checkpoint, last_checkpoint, reduce_lr, TerminateOnNaN()])
     model.load_weights(save_dir+'/keras.model')
     intermediate_layer_model = Model(inputs=model.input,
                                      outputs=model.get_layer('x_vector').output)

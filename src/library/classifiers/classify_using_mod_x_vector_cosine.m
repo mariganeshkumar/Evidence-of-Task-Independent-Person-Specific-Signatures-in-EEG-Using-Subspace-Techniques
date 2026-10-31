@@ -80,7 +80,7 @@ catch
 GPU_no = 0;
 end
 
-run_ann(config.seed, config.hiddenlayers, config.tmp_dir, train_data_mat, train_label,val_data_mat, val_label, test_data_mat, test_label, models_dir, config.test_only, GPU_no);
+run_ann(config.seed, config.hiddenlayers, config.tmp_dir, train_data_mat, train_label,val_data_mat, val_label, test_data_mat, test_label, models_dir, config.test_only, GPU_no, config.epochs);
 
 data = load([models_dir,'/predicted_labels.mat']);
 
@@ -114,10 +114,18 @@ result.subject_wise_target_scores = subject_wise_target_scores;
 result.subject_wise_non_target_scores = subject_wise_non_target_scores;
 end
 
-function [] = run_ann(seed, hidden_layer_size, tmp_dir, train_data, train_label ,val_data, val_label, test_data, test_label, save_dir, only_test, GPU_Number)
+function [] = run_ann(seed, hidden_layer_size, tmp_dir, train_data, train_label ,val_data, val_label, test_data, test_label, save_dir, only_test, GPU_Number, epochs)
+if ~exist('epochs','var')
+    epochs = 1;
+end
 disp('writing files for X-vector training')
-save([tmp_dir,'/subject_id_dataset_for_keras.mat'],'train_data','train_label','val_data', 'val_label','test_data','test_label','hidden_layer_size','-v7.3')
+if exist('OCTAVE_VERSION', 'builtin')
+    % Octave cannot write MATLAB v7.3 (HDF5); hdf5storage.loadmat falls back to scipy for v7 files
+    save('-v7', [tmp_dir,'/subject_id_dataset_for_keras.mat'],'train_data','train_label','val_data', 'val_label','test_data','test_label','hidden_layer_size')
+else
+    save([tmp_dir,'/subject_id_dataset_for_keras.mat'],'train_data','train_label','val_data', 'val_label','test_data','test_label','hidden_layer_size','-v7.3')
+end
 clear 'train_data' 'train_label' 'test_data' 'test_data' 'val_label' 'val_data' 'test_label';
-disp(['bash library/xvector/scripts/Train_And_Test_Mod_Xvectors_Cosine.bash ',tmp_dir, ' ', save_dir, ' ', num2str(only_test), ' ', num2str(seed), ' ', num2str(GPU_Number)])
-system(['bash library/xvector/scripts/Train_And_Test_Mod_Xvectors_Cosine.bash ',tmp_dir, ' ', save_dir, ' ', num2str(only_test) , ' ', num2str(seed),' ', num2str(GPU_Number)])
+disp(['bash library/xvector/scripts/Train_And_Test_Mod_Xvectors_Cosine.bash ',tmp_dir, ' ', save_dir, ' ', num2str(only_test), ' ', num2str(seed), ' ', num2str(GPU_Number), ' ', num2str(epochs)])
+system(['bash library/xvector/scripts/Train_And_Test_Mod_Xvectors_Cosine.bash ',tmp_dir, ' ', save_dir, ' ', num2str(only_test) , ' ', num2str(seed),' ', num2str(GPU_Number), ' ', num2str(epochs)])
 end

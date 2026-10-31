@@ -11,7 +11,11 @@ function [] = make_data(config)
     subject_wise_data=strcat(config.tmp_dir,'/subject_wise_data');
     protcol_wise_data=config.data_dir;
     for i = 1:length(experiments)
-        recordings = dir([data_dir,'/',experiments{i},'/**/*.mat']);
+        if exist('OCTAVE_VERSION', 'builtin')
+            recordings = find_mat_files_recursive([data_dir,'/',experiments{i}]); % Octave: dir() has no '**'
+        else
+            recordings = dir([data_dir,'/',experiments{i},'/**/*.mat']);
+        end
         base_folder= {recordings(:).folder};
         recordings = {recordings(:).name};
         for j = 1:length(recordings)
@@ -157,4 +161,4 @@ function [all_session_data,test_data] = divIntoValTestChunks(filename, save_dir,
         data = data - mean(data,2);
         save([save_dir,'/test/',subject_ind,'/',session_name,'/',experiment_name,'/',num2str(i), sess_time, '.tmp.mat'],'data','sampling_rate','cleanchanlocs'); %% tmp files will be ignored in sync and git
     end  
-end
+end

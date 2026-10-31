@@ -23,7 +23,7 @@ def get_modified_x_vector_model(train_data, train_label, num_channels, hiddenLay
     tdnn_layer1 = TDNN(int(hiddenLayerConfig[0][0]), (0,), padding='same', activation="sigmoid", name="TDNN1")
     tdnn_layer2 = TDNN(int(hiddenLayerConfig[0][1]), input_context=(0,), padding='same', activation="sigmoid", name="TDNN2")
     average = Lambda(lambda xin: K.mean(xin, axis=1), output_shape=(int(hiddenLayerConfig[0][1]),))
-    variance = Lambda(lambda xin: K.std(xin, axis=1), output_shape=(int(hiddenLayerConfig[0][1]),))
+    variance = Lambda(lambda xin: K.sqrt(K.var(xin, axis=1) + 1e-6), output_shape=(int(hiddenLayerConfig[0][1]),))
 
     splitted_channels = Lambda(split_channels)(inputs)
 

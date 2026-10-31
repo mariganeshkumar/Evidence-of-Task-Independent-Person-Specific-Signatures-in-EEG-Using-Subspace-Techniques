@@ -17,7 +17,7 @@ classdef configuration
         
 
         %% Directory in which the continues data are stored; Data needs to be present for the program to run.
-        data_dir_128='../IITM_Task_Independent_EEG_Dataset/';
+        data_dir_128='../IITM_Task_Independent_EEG_Dataset/';  % can be overridden with the EEG_DATA_DIR environment variable
 
         %% split to chosen
         split = 15
@@ -149,6 +149,9 @@ classdef configuration
         
         %% hidden layer config for x-vector
         hiddenlayers = [1024 512 160];
+
+        %% max number of training epochs for x-vector (early stopping may end sooner)
+        epochs = 100;
         
         %% UBM Parameters
         mixtures=7;
@@ -196,6 +199,10 @@ classdef configuration
             self.features_dir=[self.features_base_dir,self.exp_name,];
 
 
+            %% Optional override of the dataset location via environment variable
+            if ~isempty(getenv('EEG_DATA_DIR'))
+                self.data_dir_128 = getenv('EEG_DATA_DIR');
+            end
             self.data_dir = self.data_dir_128;
             
             %% UpdateTMPDir
