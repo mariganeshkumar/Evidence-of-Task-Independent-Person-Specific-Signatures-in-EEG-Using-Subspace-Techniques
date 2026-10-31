@@ -7,6 +7,9 @@ test_only = int(sys.argv[3])
 # Apparently you may use different seed values at each stage
 seed_value= int(sys.argv[4])
 
+# max training epochs (optional; default 1 = previous behaviour)
+num_epochs = int(sys.argv[5]) if len(sys.argv) > 5 else 1
+
 # 1. Set `PYTHONHASHSEED` environment variable at a fixed value
 import os
 os.environ['PYTHONHASHSEED']=str(seed_value)
@@ -111,7 +114,7 @@ if test_only == 0 :
     reduce_lr = ReduceLROnPlateau(factor=0.5, patience=3, min_lr=0.00000000001, verbose=1)
 
     #Fit the model
-    model.fit(train_data, train_label,validation_data=(val_data, val_label), epochs=1, batch_size=16, verbose=2,
+    model.fit(train_data, train_label,validation_data=(val_data, val_label), epochs=num_epochs, batch_size=16, verbose=2,
           callbacks=[early_stopping, model_checkpoint, reduce_lr])
     model.load_weights(save_dir+'/keras.model')
     intermediate_layer_model = Model(inputs=model.input,

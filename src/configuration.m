@@ -149,6 +149,9 @@ classdef configuration
         
         %% hidden layer config for x-vector
         hiddenlayers = [1024 512 160];
+
+        %% max number of training epochs for x-vector (early stopping may end sooner)
+        epochs = 100;
         
         %% UBM Parameters
         mixtures=7;
