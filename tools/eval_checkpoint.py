@@ -1,8 +1,9 @@
 """Evaluate a trained modified-x-vector checkpoint without retraining.
 
 Rebuilds the model from src/library/xvector/scripts/x_vector_models.py, loads the
-weights from a keras.model checkpoint, applies the same preprocessing as training
-(log(x + eps), then standardisation with the training-set mean/std) and reports:
+weights from a keras.model (or keras_last.model) checkpoint and reports, on the raw
+features as fed by the training script (pass --log-standardise for checkpoints trained
+with log(x + eps) followed by training-set mean/std standardisation):
   * softmax classification accuracy on train / val / test (1-based labels, i.e.
     without the off-by-one of the training script's printout), and
   * x-vector + LDA (fit on train segment x-vectors) + cosine accuracy on val / test.
@@ -12,7 +13,7 @@ then be computed with the bundled BOSARIS toolkit, e.g. in Octave/MATLAB from sr
   [pm, pf] = rocch(s.target_test(:)', s.non_target_test(:)'); rocch2eer(pm, pf) * 100
 
 Usage (Python 3.6 env from requirements.txt):
-  python tools/eval_checkpoint.py CHECKPOINT DATA_MAT OUT_DIR [--scripts-dir DIR] [--eps 1e-6]
+  python tools/eval_checkpoint.py CHECKPOINT DATA_MAT OUT_DIR [--scripts-dir DIR] [--log-standardise [--eps 1e-6]]
     CHECKPOINT  .../dnn_models/keras.model written by the training script
     DATA_MAT    tmp/<exp_name>/subject_id_dataset_for_keras.mat written by run_ann
     OUT_DIR     directory for scores.mat (created if missing)
@@ -39,7 +40,11 @@ def main():
     ap.add_argument('out_dir')
     ap.add_argument('--scripts-dir', default=DEFAULT_SCRIPTS,
                     help='directory containing x_vector_models.py (default: %(default)s)')
-    ap.add_argument('--eps', type=float, default=1e-6, help='log offset used in training (default: %(default)s)')
+    ap.add_argument('--log-standardise', action='store_true',
+                    help='apply log(x + eps) and train-set standardisation (for checkpoints trained that way; '
+                         'default: raw features, matching the training script)')
+    ap.add_argument('--eps', type=float, default=1e-6,
+                    help='log offset for --log-standardise (default: %(default)s)')
     args = ap.parse_args()
 
     import tensorflow as tf
@@ -58,10 +63,13 @@ def main():
     os.makedirs(args.out_dir, exist_ok=True)
     d = hdf5storage.loadmat(args.data_mat)
     hl = d['hidden_layer_size']
-    X = {k: np.log(d[k + '_data'].astype(np.float64) + args.eps) for k in ['train', 'val', 'test']}
-    mu, sd = X['train'].mean(), X['train'].std()
-    print('train mean %.4f std %.4f' % (mu, sd))
-    X = {k: np.moveaxis((v - mu) / sd, 2, -1) for k, v in X.items()}
+    X = {k: d[k + '_data'].astype(np.float64) for k in ['train', 'val', 'test']}
+    if args.log_standardise:
+        X = {k: np.log(v + args.eps) for k, v in X.items()}
+        mu, sd = X['train'].mean(), X['train'].std()
+        print('log+standardise: train mean %.4f std %.4f' % (mu, sd))
+        X = {k: (v - mu) / sd for k, v in X.items()}
+    X = {k: np.moveaxis(v, 2, -1) for k, v in X.items()}
     Y = {k: np.squeeze(d[k + '_label']).astype(np.int64) for k in ['train', 'val', 'test']}  # 1-based
     ncls = len(np.unique(Y['train']))
 
