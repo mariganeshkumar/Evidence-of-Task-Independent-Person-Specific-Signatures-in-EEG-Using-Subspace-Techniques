@@ -39,7 +39,7 @@ from x_vector_models import get_modified_x_vector_model
 from keras import losses
 from keras.models import Model
 from keras.utils.np_utils import to_categorical
-from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau, TerminateOnNaN
 from keras.utils.generic_utils import get_custom_objects
 from keras.optimizers import Adam
 from keras.metrics import top_k_categorical_accuracy
@@ -75,6 +75,19 @@ testData = dataset['test_data']
 testLabel = dataset['test_label']
 hiddenLayerConfig = dataset['hidden_layer_size']
 
+# Log-transform spectral power (raw range ~1e-5..2e3 caused NaN divergence),
+# then standardise with a single global mean/std computed on the training set.
+log_eps = 1e-6
+trainData = np.log(trainData.astype(np.float64) + log_eps)
+valData = np.log(valData.astype(np.float64) + log_eps)
+testData = np.log(testData.astype(np.float64) + log_eps)
+train_mean = trainData.mean()
+train_std = trainData.std()
+trainData = (trainData - train_mean) / train_std
+valData = (valData - train_mean) / train_std
+testData = (testData - train_mean) / train_std
+print('log+standardise: train mean %.4f std %.4f' % (train_mean, train_std))
+
 
 num_channels = trainData.shape[1]
 train_data = np.moveaxis(trainData, 2, -1)
@@ -102,7 +115,7 @@ test_label =  to_categorical(np.squeeze(testLabel - 1), num_classes=train_label.
 
 if test_only == 0 :
     model = get_modified_x_vector_model(train_data, train_label, num_channels, hiddenLayerConfig)
-    adam_opt = Adam(lr=0.001, clipvalue=1)
+    adam_opt = Adam(lr=0.0001, clipvalue=1)
     model.compile(loss=losses.categorical_crossentropy, optimizer=adam_opt,
                   metrics=['accuracy', top_k_categorical_accuracy])
     model.summary()
@@ -115,13 +128,13 @@ if test_only == 0 :
 
     #Fit the model
     model.fit(train_data, train_label,validation_data=(val_data, val_label), epochs=num_epochs, batch_size=16, verbose=2,
-          callbacks=[early_stopping, model_checkpoint, reduce_lr])
+          callbacks=[early_stopping, model_checkpoint, reduce_lr, TerminateOnNaN()])
     model.load_weights(save_dir+'/keras.model')
     intermediate_layer_model = Model(inputs=model.input,
                                      outputs=model.get_layer('x_vector').output)
 else:
     intermediate_layer_model = get_modified_x_vector_model(train_data, train_label, num_channels, hiddenLayerConfig, forTesting=True)
-    adam_opt = Adam(lr=0.001, clipvalue=1)
+    adam_opt = Adam(lr=0.0001, clipvalue=1)
     intermediate_layer_model.compile(loss=losses.categorical_crossentropy, optimizer=adam_opt,
                   metrics=['accuracy', top_k_categorical_accuracy])
     intermediate_layer_model.summary()
