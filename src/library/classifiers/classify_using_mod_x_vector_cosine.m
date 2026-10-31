@@ -116,7 +116,12 @@ end
 
 function [] = run_ann(seed, hidden_layer_size, tmp_dir, train_data, train_label ,val_data, val_label, test_data, test_label, save_dir, only_test, GPU_Number)
 disp('writing files for X-vector training')
-save([tmp_dir,'/subject_id_dataset_for_keras.mat'],'train_data','train_label','val_data', 'val_label','test_data','test_label','hidden_layer_size','-v7.3')
+if exist('OCTAVE_VERSION', 'builtin')
+    % Octave cannot write MATLAB v7.3 (HDF5); hdf5storage.loadmat falls back to scipy for v7 files
+    save('-v7', [tmp_dir,'/subject_id_dataset_for_keras.mat'],'train_data','train_label','val_data', 'val_label','test_data','test_label','hidden_layer_size')
+else
+    save([tmp_dir,'/subject_id_dataset_for_keras.mat'],'train_data','train_label','val_data', 'val_label','test_data','test_label','hidden_layer_size','-v7.3')
+end
 clear 'train_data' 'train_label' 'test_data' 'test_data' 'val_label' 'val_data' 'test_label';
 disp(['bash library/xvector/scripts/Train_And_Test_Mod_Xvectors_Cosine.bash ',tmp_dir, ' ', save_dir, ' ', num2str(only_test), ' ', num2str(seed), ' ', num2str(GPU_Number)])
 system(['bash library/xvector/scripts/Train_And_Test_Mod_Xvectors_Cosine.bash ',tmp_dir, ' ', save_dir, ' ', num2str(only_test) , ' ', num2str(seed),' ', num2str(GPU_Number)])
